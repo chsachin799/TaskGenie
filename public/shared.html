@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Task | TaskGenie</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #000 100%);
+        }
+
+        .shared-card {
+            background: rgba(16, 20, 30, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .shared-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+            animation: scan 2s infinite linear;
+        }
+
+        @keyframes scan {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        h1 {
+            color: var(--accent-blue);
+            margin-bottom: 20px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .meta-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-purple);
+        }
+
+        .label {
+            font-size: 0.8rem;
+            color: #888;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .value {
+            font-size: 1.1rem;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .status-completed {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+            border: 1px solid #00ff88;
+        }
+
+        .status-pending {
+            background: rgba(255, 255, 0, 0.2);
+            color: #ffff00;
+            border: 1px solid #ffff00;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="shared-card" id="task-container">
+        <i class="fas fa-circle-notch fa-spin fa-3x" style="color:var(--accent-blue)"></i>
+        <p style="margin-top:20px; color:#888;">Decryption in progress...</p>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        async function fetchSharedTask() {
+            const hash = window.location.pathname.split('/').pop();
+            const container = document.getElementById('task-container');
+
+            try {
+                const res = await fetch(`${API_URL}/shared/${hash}`);
+                if (!res.ok) throw new Error("Link Expired or Invalid");
+
+                const data = await res.json();
+                const task = data.task;
+
+                container.innerHTML = `
+                    <div style="margin-bottom:20px;">
+                        <span class="status-badge status-${task.status}">${task.status}</span>
+                    </div>
+                    <h1>${task.description}</h1>
+                    
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <span class="label">Priority</span>
+                            <span class="value" style="color:${task.priority === 'High' ? '#ff3333' : 'white'}">${task.priority}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="label">Due Date</span>
+                            <span class="value">${task.due_date || 'No Deadline'}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="label">Category</span>
+                            <span class="value">${task.category || 'General'}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="label">Created At</span>
+                            <span class="value">${new Date(task.created_at).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:30px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
+                        <p style="color:#666; font-size:0.9rem;">Shared via TaskGenie</p>
+                        <a href="/" style="color:var(--accent-blue); text-decoration:none; font-weight:bold; margin-top:10px; display:inline-block;">Launch App <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                `;
+            } catch (err) {
+                container.innerHTML = `
+                    <i class="fas fa-exclamation-triangle fa-3x" style="color:#ff3333"></i>
+                    <h2 style="color:#ff3333; margin-top:20px;">Access Denied</h2>
+                    <p style="color:#888;">The secure link has expired or is invalid.</p>
+                    <a href="/" style="color:white; margin-top:20px; display:inline-block;">Return to Base</a>
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchSharedTask);
+    </script>
+</body>
+
+</html>

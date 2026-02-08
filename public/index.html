@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskGenie - Voice Task Manager</title>
+    <link rel="stylesheet" href="style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Space+Grotesk:wght@300;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="app-container">
+        <!-- Header / Status -->
+        <header>
+            <div class="header-content">
+                <h1>TaskGenie</h1>
+                <div class="status-indicator">
+                    <div class="pulse-ring"></div>
+                    <span id="system-status">ONLINE</span>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button class="icon-btn" onclick="toggleCalendar()" title="Calendar"><i
+                        class="far fa-calendar-alt"></i></button>
+                <button class="icon-btn" onclick="toggleAnalytics()" title="Analytics"><i
+                        class="fas fa-chart-line"></i></button>
+                <button class="icon-btn" onclick="togglePomodoro()" title="Focus Mode"><i
+                        class="fas fa-hourglass-half"></i></button>
+                <button id="notify-btn" class="icon-btn" onclick="requestNotificationPermission()"
+                    title="Notifications"><i class="fas fa-bell-slash"></i></button>
+                <button id="insight-btn" class="icon-btn" onclick="getInsights()" title="AI Insights"><i
+                        class="fas fa-brain"></i></button>
+                <div class="separator"></div>
+                <button class="icon-btn" onclick="TaskManager.openRecycleBin()" title="Recycle Bin"><i
+                        class="fas fa-trash-restore"></i></button>
+                <button class="icon-btn settings-btn" onclick="UI.toggleSound()" title="Toggle Sound"><i
+                        class="fas fa-volume-up"></i></button>
+            </div>
+        </header>
+
+        <!-- Profile Display moved here -->
+        <div id="profile-display"
+            style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; font-size:0.9rem; color:var(--text-secondary); border-bottom:1px solid var(--glass-border); padding-bottom:10px;">
+            <!-- Profile Data Injected via JS -->
+        </div>
+
+        <!-- Controls Bar (Static) -->
+        <div id="controls-bar" class="controls-bar glass-panel">
+            <div class="search-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" placeholder="Search tasks..."
+                    oninput="searchQuery = this.value; TaskManager.fetchTasks();">
+            </div>
+
+            <div class="filter-wrapper">
+                <select id="filter-select" onchange="currentFilter = this.value; TaskManager.fetchTasks();">
+                    <option value="all">All Tasks</option>
+                    <option value="pending" selected>Pending</option>
+                    <option value="completed">Completed</option>
+                </select>
+
+                <button onclick="TaskManager.toggleSort()" class="sort-btn" title="Sort Order">
+                    <i class="fas fa-sort"></i> <span id="sort-label">Newest</span>
+                </button>
+
+                <button id="archive-btn" onclick="TaskManager.toggleArchives()" class="archive-btn"
+                    title="View Archives">
+                    <i class="fas fa-archive"></i>
+                </button>
+            </div>
+        </div>
+
+        <section id="ai-dashboard" class="dashboard-panel" style="display:none;">
+            <div class="glass-panel">
+                <h2><i class="fas fa-chess"></i> Strategic Insight</h2>
+                <div id="insight-content" class="typing-text">Initializing tactical analysis...</div>
+                <button class="close-btn futuristic-btn" onclick="toggleDashboard()">CLOSE</button>
+            </div>
+        </section>
+
+        <!-- Calendar View -->
+        <section id="calendar-view" class="dashboard-panel" style="display:none;">
+            <div class="glass-panel" style="max-width:800px;">
+                <h2 style="display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="far fa-calendar-alt"></i> Mission Timeline</span>
+                    <button class="close-btn futuristic-btn" onclick="toggleCalendar()">CLOSE</button>
+                </h2>
+                <div id="calendar-grid"
+                    style="display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; margin-top:20px;">
+                    <!-- Days injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics View -->
+        <section id="analytics-view" class="dashboard-panel" style="display:none;">
+            <div class="glass-panel">
+                <h2 style="display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="fas fa-chart-line"></i> Performance Data</span>
+                    <button class="close-btn futuristic-btn" onclick="toggleAnalytics()">CLOSE</button>
+                </h2>
+                <div id="analytics-chart"
+                    style="height:200px; display:flex; align-items:flex-end; gap:10px; margin-top:20px; padding-bottom:10px; border-bottom:1px solid var(--glass-border);">
+                    <!-- Bars injected here -->
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:0.8rem; color:var(--text-secondary);"
+                    id="chart-labels">
+                    <!-- Labels -->
+                </div>
+            </div>
+        </section>
+
+        <section id="pomodoro-view" class="dashboard-panel" style="display:none;">
+            <div class="glass-panel" style="text-align:center;">
+                <h2><i class="fas fa-hourglass-half"></i> Focus Timer</h2>
+                <div id="timer-display"
+                    style="font-size:4rem; font-family:var(--font-head); margin:20px 0; color:var(--accent-blue);">25:00
+                </div>
+                <div style="display:flex; gap:10px; justify-content:center;">
+                    <button class="futuristic-btn" onclick="startTimer()">START</button>
+                    <button class="futuristic-btn" onclick="pauseTimer()">PAUSE</button>
+                    <button class="futuristic-btn" onclick="resetTimer()">RESET</button>
+                </div>
+                <button class="close-btn futuristic-btn" onclick="togglePomodoro()"
+                    style="margin-top:20px;">CLOSE</button>
+            </div>
+        </section>
+
+        <!-- Voice Activation Center -->
+        <div class="voice-center">
+            <button id="mic-btn" class="mic-button">
+                <i class="fas fa-microphone"></i>
+                <div class="listening-ring"></div>
+            </button>
+            <p id="transcript-display">Click microphone to issue command...</p>
+        </div>
+
+        <div class="manual-input">
+            <input type="text" id="manual-text" placeholder="Or type command here..." onkeypress="handleEnter(event)">
+            <button onclick="sendManualCommand()" class="futuristic-btn" style="padding: 10px;"><i
+                    class="fas fa-paper-plane"></i></button>
+        </div>
+
+        <!-- Task Deck (Holographic) -->
+        <div class="task-deck" id="task-list">
+            <!-- Tasks will be injected here as Cards -->
+            <!-- Example Card Structure for reference:
+            <div class="task-card priority-high" data-tilt>
+                <div class="card-content">
+                    <h3>Submit Project Report</h3>
+                    <p class="meta"><i class="far fa-clock"></i> Tomorrow, 10:00 AM</p>
+                    <span class="badge category-work">Work</span>
+                </div>
+            </div>
+            -->
+        </div>
+        <!-- Debug Console (For Troubleshooting) -->
+        <div id="debug-console" style="
+            margin-top: 2rem; 
+            width: 100%; 
+            background: rgba(0,0,0,0.5); 
+            border: 1px solid var(--accent-purple); 
+            padding: 1rem; 
+            border-radius: 8px; 
+            font-family: monospace; 
+            font-size: 0.8rem; 
+            color: #ccc; 
+            display: none;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                <span style="color:var(--accent-blue)">TIMELINE</span>
+                <button onclick="document.getElementById('debug-log').innerHTML=''"
+                    style="background:none; border:none; color:#ffff; cursor:pointer;">CLEAR</button>
+            </div>
+            <div id="debug-log" style="max-height: 100px; overflow-y: auto;"></div>
+        </div>
+        <div style="text-align:center; margin-top:10px;">
+            <small onclick="document.getElementById('debug-console').style.display='block'"
+                style="cursor:pointer; opacity:0.3;">Show Debug Console</small>
+        </div>
+        <!-- Quick Add FAB -->
+        <button onclick="toggleQuickAdd()" style="
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; 
+            width: 60px; 
+            height: 60px; 
+            border-radius: 50%; 
+            background: var(--accent-blue); 
+            color: black; 
+            border: none; 
+            font-size: 24px; 
+            box-shadow: 0 0 20px rgba(0,255,136,0.4); 
+            cursor: pointer; 
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+            <i class="fas fa-plus"></i>
+        </button>
+
+        <!-- Quick Add Modal -->
+        <div id="quick-add-modal" style="
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); 
+            z-index: 2000; 
+            align-items: center; 
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        ">
+            <div data-tilt style="
+                background: rgba(20, 20, 20, 0.95); 
+                border: 1px solid var(--accent-blue); 
+                padding: 30px; 
+                border-radius: 16px; 
+                width: 90%; 
+                max-width: 500px;
+                box-shadow: 0 0 50px rgba(0,255,136,0.2);
+            ">
+                <h2 style="color:var(--accent-blue); margin-bottom:20px;">Quick Add Task</h2>
+                <input type="text" id="quick-add-input" placeholder="e.g. 'Meeting with Bob next friday #Work'"
+                    style="width: 100%; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid #444; color: white; border-radius: 8px; font-size: 1.1rem; outline: none; transition: border-color 0.3s;">
+
+                <div id="quick-add-preview"
+                    style="margin-top: 15px; min-height: 20px; font-size: 0.9rem; color: var(--text-secondary);">
+                    <!-- Live parsing preview -->
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top: 20px;">
+                    <button onclick="toggleQuickAdd()"
+                        style="background:transparent; border:1px solid #666; color:#ccc; padding:10px 20px; border-radius:4px; cursor:pointer;">Cancel</button>
+                    <button onclick="processQuickAdd()"
+                        style="background:var(--accent-blue); border:none; color:black; padding:10px 20px; border-radius:4px; cursor:pointer; font-weight:bold;">Add
+                        Task</button>
+                </div>
+            </div>
+        </div>
+        <!-- Recycle Bin Modal -->
+        <div id="recycle-bin-modal" class="modal" style="display:none;">
+            <div class="modal-content" style="max-width: 600px;">
+                <span class="close-btn" onclick="UI.closeModal('recycle-bin-modal')">&times;</span>
+                <h2 style="color:var(--accent-blue);"><i class="fas fa-trash-restore"></i> Recycle Bin</h2>
+                <div id="recycle-bin-list" class="task-deck"
+                    style="max-height: 400px; overflow-y: auto; margin-top:20px;">
+                    <!-- Deleted tasks go here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div id="delete-confirm-modal" class="modal" style="display:none; align-items:center; justify-content:center;">
+            <div class="modal-content" style="max-width: 400px; text-align:center;">
+                <h2 style="color:#ff3333">Delete Task</h2>
+                <p style="margin: 20px 0;">Where should this task go?</p>
+                <div class="modal-actions" style="display:flex; flex-direction:column; gap:10px;">
+                    <button onclick="TaskManager.executeDelete(currentDeleteId, false)" class="futuristic-btn"
+                        style="border-color:var(--accent-blue);">
+                        <i class="fas fa-recycle"></i> Move to Recycle Bin
+                    </button>
+                    <button onclick="TaskManager.executeDelete(currentDeleteId, true)" class="futuristic-btn"
+                        style="border-color:#ff3333; color:#ff3333;">
+                        <i class="fas fa-fire"></i> Delete Permanently
+                    </button>
+                </div>
+                <button onclick="UI.closeModal('delete-confirm-modal')"
+                    style="margin-top:20px; background:none; border:none; color:#aaa; cursor:pointer;">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Biometric Lock Modal -->
+        <div id="bio-modal"
+            style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:3000; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
+            <div style="text-align:center; color:var(--accent-blue);">
+                <i class="fas fa-fingerprint"
+                    style="font-size:4rem; margin-bottom:20px; animation: pulse 1s infinite;"></i>
+                <h2>IDENTITY VERIFICATION REQUIRED</h2>
+                <p id="bio-status" style="font-family:monospace; margin-top:10px;">SCANNING BIOMETRIC SIGNATURE...</p>
+            </div>
+        </div>
+
+        <!-- Legacy Protocol Modal -->
+        <div id="legacy-modal" class="dashboard-panel" style="display:none; z-index:2500;">
+            <div class="glass-panel" style="text-align:center; max-width:600px;">
+                <h2><i class="fas fa-scroll"></i> Legacy Protocol</h2>
+                <div id="poem-display"
+                    style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 1.1rem; color: #00ff88; margin: 20px 0; border:1px dashed #00ff88; padding:20px;">
+                </div>
+                <button class="futuristic-btn"
+                    onclick="document.getElementById('legacy-modal').style.display='none'">ACKNOWLEDGE</button>
+            </div>
+        </div>
+
+        <!-- Share Modal -->
+        <div id="share-modal"
+            style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2100; align-items:center; justify-content:center;">
+            <div class="glass-panel" style="max-width:500px; text-align:center;">
+                <h3><i class="fas fa-share-alt"></i> Public Access Link</h3>
+                <input type="text" id="share-link-input" readonly
+                    style="width:100%; padding:10px; margin:20px 0; background:rgba(0,0,0,0.5); color:var(--accent-blue); border:1px solid var(--accent-blue);">
+                <button class="futuristic-btn"
+                    onclick="document.getElementById('share-modal').style.display='none'">CLOSE</button>
+            </div>
+        </div>
+
+    </div> <!-- End .app-container -->
+
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
