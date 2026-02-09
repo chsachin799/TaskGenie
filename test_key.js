@@ -12,22 +12,22 @@ async function listModels() {
         // but let's try a simple generation to 'gemini-pro' and 'gemini-1.5-flash' explicitly
         // to see distinct errors.
 
-        console.log("\nAttempting 'gemini-1.5-flash'...");
+        console.log("\nAttempting 'gemini-2.5-flash'...");
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
             const result = await model.generateContent("Test");
-            console.log("SUCCESS: gemini-1.5-flash works.");
+            console.log("SUCCESS: gemini-2.5-flash works.");
         } catch (e) {
-            console.log("FAILED 'gemini-1.5-flash':", e.message);
+            console.log("FAILED 'gemini-2.5-flash':", e.message);
         }
 
-        console.log("\nAttempting 'gemini-pro'...");
+        console.log("\nAttempting 'gemini-2.0-flash'...");
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
             const result = await model.generateContent("Test");
-            console.log("SUCCESS: gemini-pro works.");
+            console.log("SUCCESS: gemini-2.0-flash works.");
         } catch (e) {
-            console.log("FAILED 'gemini-pro':", e.message);
+            console.log("FAILED 'gemini-2.0-flash':", e.message);
         }
 
     } catch (err) {

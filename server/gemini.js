@@ -87,7 +87,7 @@ async function processCommand(commandText) {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     // Updated to standard flash model (latest)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const result = await model.generateContent(SYSTEM_PROMPT + "\nInput: " + commandText);
     const response = await result.response;
@@ -169,7 +169,7 @@ async function generateInsights(activeTasks, completedTasks) {
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
