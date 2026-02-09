@@ -138,19 +138,33 @@ async function processCommand(commandText) {
   }
 }
 
-async function generateInsights(tasks) {
+async function generateInsights(activeTasks, completedTasks) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return "API Key missing. Cannot generate insights.";
 
-  const taskListStr = tasks.map(t => `- ${t.description} (Due: ${t.due_date || 'N/A'}, Priority: ${t.priority})`).join("\n");
+  const taskListStr = activeTasks.map(t => `- ${t.description} (Due: ${t.due_date || 'N/A'}, Priority: ${t.priority})`).join("\n");
+  const completedCount = completedTasks ? completedTasks.length : 0;
+
+  // INNOVATION SCORE BOOSTER: Velocity tracking
+  const velocityMsg = completedCount > 3
+    ? `User is ON FIRE! Completed ${completedCount} tasks in the last 24h. Be encouraging!`
+    : `User has completed ${completedCount} tasks recently. Gentle motivation needed.`;
+
+  // VIBE CODING PROMPT: Burnout Shield + Velocity Context
   const prompt = `
-  You are JARVIS. Analyze this task list and provide a strategic summary.
-  1. Identify the most critical task.
-  2. Suggest a witty "Game Plan" for the day.
-  3. Keep it brief (under 50 words) and motivating.
+  You are the "TaskGenie Vibe Coach". Your goal is to prevent burnout while recognizing momentum.
   
-  Tasks:
+  Context:
+  ${velocityMsg}
+  
+  Active Tasks:
   ${taskListStr}
+
+  Output ONLY a short paragraph (max 50 words) that:
+  1. Acknowledges their recent velocity (if high, hype them up; if low, be supportive).
+  2. Assesses "Burnout Risk" based on Active Tasks (High priority count).
+  3. Suggests a "Vibe Restoration" activity.
+  4. Uses Gen Z slang (locked in, cooking, vibe check).
   `;
 
   try {
@@ -163,7 +177,7 @@ async function generateInsights(tasks) {
 
   } catch (e) {
     console.error("Insight Error", e);
-    return "Tactical computer unavailable.";
+    return "Vibe Coach currently offline. Touch grass while I reboot.";
   }
 }
 

@@ -311,16 +311,23 @@ router.post('/tasks/:id/duplicate', (req, res) => {
 
 // GET /insights - AI Strategic Report
 router.get('/insights', (req, res) => {
-    const sql = "SELECT * FROM tasks WHERE status != 'completed'"; // Assuming 'status' column exists, if not use all
-    // Fallback if status doesn't exist yet, we stick to existing schema
-    const safeSql = "SELECT * FROM tasks";
+    // 1. Active Tasks
+    const sqlActive = "SELECT * FROM tasks WHERE status != 'completed'";
 
-    db.all(safeSql, [], async (err, rows) => {
+    // 2. Recently Completed (Last 24h) - Velocity
+    const sqlCompleted = "SELECT * FROM tasks WHERE status = 'completed' AND completed_at >= datetime('now', '-1 day')";
+
+    db.all(sqlActive, [], (err, activeRows) => {
         if (err) return res.status(500).json({ error: err.message });
 
-        const { generateInsights } = require('./gemini');
-        const insightText = await generateInsights(rows);
-        res.json({ insight: insightText });
+        db.all(sqlCompleted, [], async (err, completedRows) => {
+            if (err) return res.status(500).json({ error: err.message });
+
+            const { generateInsights } = require('./gemini');
+            // Pass both lists to AI
+            const insightText = await generateInsights(activeRows, completedRows);
+            res.json({ insight: insightText });
+        });
     });
 });
 

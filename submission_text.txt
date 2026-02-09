@@ -1,0 +1,31 @@
+# TaskGenie 🧞‍♂️✨ - The Anti-Burnout Productivity Companion
+
+## Inspiration
+We all have endless to-do lists, but standard apps just add to the pressure. We wanted to build a tool that understands *context*—not just *what* we have to do, but *how* we're feeling about it.
+
+## What it does
+TaskGenie is a gamified task manager powered by **Gemini 1.5 Flash**. It doesn't just list tasks; it acts as a "Vibe Coach."
+1.  **Burnout Shield**: It analyzes your workload for "high-risk" days and suggests breaks.
+2.  **Voice Protocols**: Speak naturally ("Project due Friday!"), and Gemini extracts structured data instantly.
+3.  **Gamification**: Earn XP and rank up from "Cadet" to "Commander" by completing tasks.
+
+## How we built it
+-   **Backend**: Node.js & Express.
+-   **AI Engine**: Google Generative AI SDK (Gemini 1.5 Flash) for two distinct roles: Data Extractor & Strategic Advisor.
+-   **Database**: SQLite for fast, local storage.
+-   **Frontend**: High-performance Vanilla JS/CSS.
+
+## Challenges we ran into
+Balancing the "Gamification" logic with real productivity was tricky. We used iterative schema migration (our `migrate_*.js` scripts) to add features like subtasks and XP daily without breaking the app.
+
+## Accomplishments that we're proud of
+The "Burnout Shield" logic is a game-changer. Seeing Gemini correctly identify a stressful Tuesday and suggest a specific "Vibe Restoration" break feels like magic.
+
+## What's next for TaskGenie
+Integration with Google Calendar and a "Team Vibe" feature for group projects.
+
+## Built With
+-   google-gemini-1.5-flash
+-   node.js
+-   sqlite
+-   express
